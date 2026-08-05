@@ -1,0 +1,35 @@
+schema_version: "1.0"
+
+id: cherry-numismatic-auction-lab
+display_name: Cherry Numismatic Auction Lab
+owner: cherry
+lane: collectibles-commerce
+visibility: public
+status: foundation
+
+purpose:
+  problem: Turn coin research into evidence-based, uncertainty-aware auction packages.
+  audience:
+    - Cherry
+    - collectors
+    - portfolio reviewers
+
+shared_services:
+  boot: mermicorn-mega-boot
+  memory: mermicorn-memory
+  token_efficiency: mermicorn-token-saver
+  graphics: mermicorn-graphic-ai
+  commerce: mermicorn-commerce-ai
+
+privacy:
+  public:
+    - sanitized_case_studies
+    - templates
+  private:
+    - customer_data
+    - private_valuations
+    - upstream_credentials
+
+first_proof:
+  artifact: one-coin-end-to-end
+  status: planned
