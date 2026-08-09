@@ -33,7 +33,9 @@ class EbayCoinIntegration:
     """eBay coin marketplace integration."""
     
     def __init__(self, api_key: str = ""):
-        self.api_key = api_key
+        self.api_key = api_key or os.environ.get("EBAY_APP_ID", "")
+        self.cert_id = os.environ.get("EBAY_CERT_ID", "")
+        self.user_token = os.environ.get("EBAY_USER_TOKEN", "")
         self.listings: list[CoinListing] = []
         self.sold_items: list[dict] = []
     
@@ -67,7 +69,8 @@ class EbayCoinIntegration:
 class PCGSIntegration:
     """PCGS price guide integration."""
     
-    def __init__(self):
+    def __init__(self, api_key: str = ""):
+        self.api_key = api_key or os.environ.get("PCGS_API_KEY", "")
         self.price_data: dict[str, dict] = {}
         self.grade_data: dict[str, dict] = {}
     
