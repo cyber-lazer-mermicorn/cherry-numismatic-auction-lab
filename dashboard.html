@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coin Intelligence — Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background: #0a0a0f; color: #e0e0e0; font-family: 'Inter', sans-serif; }
+        .gold { color: #ffd700; text-shadow: 0 0 10px #ffd700; }
+        .card { background: #12121a; border: 1px solid #2a2a3a; border-radius: 12px; }
+    </style>
+</head>
+<body class="min-h-screen p-6">
+    <div class="max-w-6xl mx-auto">
+        <div class="flex items-center justify-between mb-8">
+            <div>
+                <h1 class="text-3xl font-bold gold">Coin Intelligence</h1>
+                <p class="text-gray-400">Identify → Grade → Value → Sell</p>
+            </div>
+            <div>
+                <input id="api-key" type="password" placeholder="API Key" class="bg-gray-800 border border-gray-600 rounded px-3 py-2 text-sm mr-2">
+                <button onclick="loadDashboard()" class="bg-yellow-600 hover:bg-yellow-700 rounded px-4 py-2 text-sm">Connect</button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-4 gap-4 mb-8">
+            <div class="card p-4 text-center"><div class="text-2xl font-bold text-yellow-400" id="stat-coins">0</div><div class="text-gray-400 text-sm">Coins</div></div>
+            <div class="card p-4 text-center"><div class="text-2xl font-bold text-green-400" id="stat-value">$0</div><div class="text-gray-400 text-sm">Total Value</div></div>
+            <div class="card p-4 text-center"><div class="text-2xl font-bold text-purple-400" id="stat-watchlist">0</div><div class="text-gray-400 text-sm">Watchlist</div></div>
+            <div class="card p-4 text-center"><div class="text-2xl font-bold text-red-400" id="stat-deals">0</div><div class="text-gray-400 text-sm">Deals Found</div></div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-6">
+            <div class="card p-6">
+                <h2 class="text-xl font-bold mb-4">Add Coin</h2>
+                <input id="coin-name" type="text" placeholder="e.g. Morgan Silver Dollar" class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 mb-3">
+                <div class="grid grid-cols-3 gap-3">
+                    <input id="coin-year" type="number" placeholder="Year" class="bg-gray-800 border border-gray-600 rounded px-3 py-2">
+                    <input id="coin-grade" type="text" placeholder="Grade (e.g. MS-63)" class="bg-gray-800 border border-gray-600 rounded px-3 py-2">
+                    <input id="coin-price" type="number" placeholder="Price" class="bg-gray-800 border border-gray-600 rounded px-3 py-2">
+                </div>
+                <button onclick="addCoin()" class="mt-3 bg-yellow-600 hover:bg-yellow-700 rounded px-6 py-2 w-full">Add to Catalog</button>
+                <div id="coins-list" class="mt-4 space-y-2 max-h-64 overflow-auto"></div>
+            </div>
+
+            <div class="card p-6">
+                <h2 class="text-xl font-bold mb-4">Market Intelligence</h2>
+                <div class="bg-gray-800 p-4 rounded mb-4">
+                    <div class="text-sm text-gray-400">Quick Analysis</div>
+                    <input id="search-coin" type="text" placeholder="Search coin..." class="w-full bg-gray-900 border border-gray-600 rounded px-3 py-2 mt-2">
+                    <button onclick="searchCoin()" class="mt-2 bg-purple-600 rounded px-4 py-2 text-sm w-full">Search Markets</button>
+                </div>
+                <div id="market-result" class="text-sm"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let apiKey = '';
+        
+        async function api(method, path, body = null) {
+            const opts = { method, headers: { 'Content-Type': 'application/json', 'X-API-Key': apiKey } };
+            if (body) opts.body = JSON.stringify(body);
+            const res = await fetch('/api' + path, opts);
+            return res.json();
+        }
+        
+        async function loadDashboard() {
+            apiKey = document.getElementById('api-key').value;
+            const data = await api('GET', '/coins');
+            const coins = data.coins || [];
+            document.getElementById('stat-coins').textContent = coins.length;
+            document.getElementById('stat-value').textContent = '$' + coins.reduce((s,c) => s + (c.price||0), 0).toFixed(0);
+            document.getElementById('coins-list').innerHTML = coins.map(c => 
+                `<div class="bg-gray-800 p-3 rounded flex justify-between"><span>${c.name} (${c.year})</span><span class="text-yellow-400">$${c.price}</span></div>`
+            ).join('');
+        }
+        
+        async function addCoin() {
+            const name = document.getElementById('coin-name').value;
+            const year = parseInt(document.getElementById('coin-year').value);
+            const grade = document.getElementById('coin-grade').value;
+            const price = parseFloat(document.getElementById('coin-price').value);
+            await api('POST', '/coins', { name, year, grade, price });
+            loadDashboard();
+        }
+        
+        function searchCoin() {
+            const q = document.getElementById('search-coin').value;
+            document.getElementById('market-result').innerHTML = 
+                `<div class="bg-gray-800 p-3 rounded">Searching eBay, PCGS, Heritage for "${q}"...<br><span class="text-gray-500">Connect APIs for live data</span></div>`;
+        }
+    </script>
+</body>
+</html>
