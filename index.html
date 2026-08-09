@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cherry Numismatic Auction Lab</title>
+    <meta name="description" content="Coin intake through photography, attribution, comps, listing, and auction strategy">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --accent: #FFD700;
+            --bg: #0a0a0f;
+            --surface: #12121a;
+            --card: #1a1a2e;
+            --muted: #8B8B9E;
+            --white: #fff;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--white); line-height: 1.6; }
+
+        nav {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+            padding: 1rem 2rem;
+            background: rgba(10,10,15,0.85);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .logo { font-weight: 900; font-size: 1.25rem; }
+        .nav-right { color: var(--muted); font-size: 0.8rem; }
+
+        .hero {
+            min-height: 100vh; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; text-align: center;
+            padding: 6rem 2rem; position: relative;
+        }
+        .hero::before {
+            content: ''; position: absolute; width: 500px; height: 500px;
+            background: radial-gradient(circle, #FFD70022, transparent 70%);
+            top: -150px; right: -150px; pointer-events: none;
+        }
+        .badge {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            padding: 0.5rem 1rem; background: #FFD70015; border: 1px solid #FFD70033;
+            border-radius: 999px; font-size: 0.75rem; color: #FFD700; margin-bottom: 1.5rem;
+        }
+        .hero h1 { font-size: clamp(2.5rem, 7vw, 5rem); font-weight: 900; line-height: 1; letter-spacing: -0.04em; margin-bottom: 1rem; }
+        .hero h1 span { color: #FFD700; }
+        .hero p { color: var(--muted); font-size: 1.125rem; max-width: 500px; margin-bottom: 2rem; }
+
+        .btn { padding: 1rem 2rem; border-radius: 999px; font-weight: 600; font-size: 0.875rem; text-decoration: none; border: none; cursor: pointer; transition: all 0.2s; display: inline-block; }
+        .btn-primary { background: #FFD700; color: #0a0a0f; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 30px #FFD70044; }
+        .btn-ghost { background: transparent; border: 1px solid rgba(255,255,255,0.15); color: var(--white); }
+        .btn-ghost:hover { border-color: #FFD700; color: #FFD700; }
+
+        .section { padding: 6rem 2rem; }
+        .section-header { text-align: center; margin-bottom: 4rem; }
+        .section-header h2 { font-size: 2rem; font-weight: 900; letter-spacing: -0.03em; margin-bottom: 0.5rem; }
+        .section-header p { color: var(--muted); }
+
+        .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; max-width: 1000px; margin: 0 auto; }
+        .feature {
+            background: var(--card); padding: 2rem; border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.06); text-align: center;
+            transition: all 0.3s;
+        }
+        .feature:hover { border-color: #FFD70044; transform: translateY(-4px); box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+        .feature-icon { font-size: 2rem; margin-bottom: 1rem; }
+        .feature h3 { font-size: 1.125rem; margin-bottom: 0.5rem; }
+        .feature p { color: var(--muted); font-size: 0.875rem; }
+
+        .items { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; max-width: 1000px; margin: 0 auto; }
+        .item {
+            background: var(--card); padding: 1.5rem; border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.06);
+            display: flex; justify-content: space-between; align-items: center;
+            transition: all 0.3s;
+        }
+        .item:hover { border-color: #FFD70044; transform: translateY(-2px); }
+        .item-name { font-weight: 600; margin-bottom: 0.25rem; }
+        .item-meta { color: var(--muted); font-size: 0.875rem; }
+        .item-price { font-weight: 700; color: #FFD700; font-size: 1.125rem; }
+        .tag { padding: 0.25rem 0.5rem; background: #FFD70018; border-radius: 4px; font-size: 0.65rem; color: #FFD700; margin-left: 0.5rem; font-weight: 600; letter-spacing: 0.05em; }
+
+        .stats { display: flex; justify-content: center; gap: 4rem; padding: 3rem 2rem; max-width: 800px; margin: 0 auto; }
+        .stat { text-align: center; }
+        .stat-value { font-size: 2rem; font-weight: 900; color: #FFD700; }
+        .stat-label { color: var(--muted); font-size: 0.8rem; margin-top: 0.25rem; }
+
+        footer { padding: 4rem 2rem; border-top: 1px solid rgba(255,255,255,0.06); text-align: center; }
+        footer p { color: var(--muted); font-size: 0.875rem; }
+        footer .brand { color: #FFD700; font-weight: 700; }
+
+        @media (max-width: 768px) {
+            .stats { gap: 2rem; }
+            .features, .items { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="logo">🪙 Cherry Numismatic Auction Lab</div>
+        <div class="nav-right">Built with 💜 by Cherry</div>
+    </nav>
+
+    <section class="hero">
+        <div class="badge">🪙 Live & Ready</div>
+        <h1><span>Cherry Numismatic Auction Lab</span></h1>
+        <p>Coin intake through photography, attribution, comps, listing, and auction strategy</p>
+        <div style="display:flex;gap:1rem;">
+            <a href="#features" class="btn btn-primary">Explore</a>
+            <a href="#items" class="btn btn-ghost">See Latest</a>
+        </div>
+    </section>
+
+    <section class="section" id="features">
+        <div class="section-header">
+            <h2>Capabilities</h2>
+            <p>Built for performance</p>
+        </div>
+        <div class="features">
+            <div class="feature"><div class="feature-icon">📸</div><h3>Photo Intake</h3><p>High-quality coin photography and cataloging</p></div>
+            <div class="feature"><div class="feature-icon">🔍</div><h3>Attribution</h3><p>Automatic coin identification and grading</p></div>
+            <div class="feature"><div class="feature-icon">💰</div><h3>Price Comps</h3><p>Market value comparison across auctions</p></div>
+            <div class="feature"><div class="feature-icon">🏷️</div><h3>Listing Engine</h3><p>Generate marketplace-ready listings</p></div>
+        </div>
+    </section>
+
+    <section class="section" id="items">
+        <div class="section-header">
+            <h2>Latest Activity</h2>
+            <p>Recent results</p>
+        </div>
+        <div class="items">
+            <div class="item"><div><div class="item-name">Morgan Dollar 1889<span class="tag">GRADED</span></div><div class="item-meta">MS63</div></div><div class="item-price">$45</div></div>
+            <div class="item"><div><div class="item-name">Walking Liberty<span class="tag">VINTAGE</span></div><div class="item-meta">VF35</div></div><div class="item-price">$28</div></div>
+            <div class="item"><div><div class="item-name">Buffalo Nickel<span class="tag">COMMON</span></div><div class="item-meta">F12</div></div><div class="item-price">$12</div></div>
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="stats">
+            <div class="stat"><div class="stat-value">4</div><div class="stat-label">Capabilities</div></div>
+            <div class="stat"><div class="stat-value">3</div><div class="stat-label">Items Tracked</div></div>
+            <div class="stat"><div class="stat-value">99%</div><div class="stat-label">Uptime</div></div>
+        </div>
+    </section>
+
+    <footer>
+        <p>© 2026 <span class="brand">Cherry Numismatic Auction Lab</span>. All rights reserved.</p>
+    </footer>
+</body>
+</html>
