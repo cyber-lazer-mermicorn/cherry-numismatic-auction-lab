@@ -3,153 +3,355 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cherry Numismatic Auction Lab</title>
-    <meta name="description" content="Coin intake through photography, attribution, comps, listing, and auction strategy">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <title>Cherry Numismatic Auction Lab — AI Coin Identification & Valuation</title>
+    <meta name="description" content="AI-powered coin identification, grading, and auction valuation. PCGS/NGC integration with vision engine.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --accent: #FFD700;
-            --bg: #0a0a0f;
-            --surface: #12121a;
-            --card: #1a1a2e;
-            --muted: #8B8B9E;
-            --white: #fff;
+            --bg: #050508;
+            --bg2: #0a0a10;
+            --card: rgba(15, 15, 22, 0.7);
+            --card-border: rgba(255, 255, 255, 0.06);
+            --text: #f0f0f5;
+            --muted: #6b6b80;
+            --gold: #f5a623;
+            --gold-dim: rgba(245, 166, 35, 0.1);
+            --amber: #fbbf24;
+            --green: #10b981;
+            --red: #ef4444;
+            --gradient: linear-gradient(135deg, #f5a623, #d4a017, #b8860b);
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html { scroll-behavior: smooth; }
-        body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--white); line-height: 1.6; }
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+        .bg-grid {
+            position: fixed; inset: 0;
+            background-image: linear-gradient(rgba(245,166,35,0.03) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(245,166,35,0.03) 1px, transparent 1px);
+            background-size: 60px 60px; z-index: -2;
+        }
+        .bg-glow {
+            position: fixed; width: 500px; height: 500px; border-radius: 50%;
+            filter: blur(150px); opacity: 0.12; z-index: -1;
+            animation: float 20s ease-in-out infinite;
+        }
+        .bg-glow-1 { top: -150px; left: -100px; background: var(--gold); }
+        .bg-glow-2 { bottom: -150px; right: -100px; background: #d4a017; animation-delay: -10s; }
+        @keyframes float { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(40px, 40px); } }
 
         nav {
-            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-            padding: 1rem 2rem;
-            background: rgba(10,10,15,0.85);
-            backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(255,255,255,0.06);
+            position: fixed; top: 0; width: 100%; padding: 20px 40px;
             display: flex; justify-content: space-between; align-items: center;
+            backdrop-filter: blur(20px); background: rgba(5, 5, 8, 0.85);
+            border-bottom: 1px solid var(--card-border); z-index: 100;
         }
-        .logo { font-weight: 900; font-size: 1.25rem; }
-        .nav-right { color: var(--muted); font-size: 0.8rem; }
+        .logo { font-family: 'Space Grotesk'; font-size: 1.3rem; font-weight: 700; background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .nav-links { display: flex; gap: 28px; }
+        .nav-links a { color: var(--muted); text-decoration: none; font-size: 0.9rem; transition: color 0.2s; }
+        .nav-links a:hover { color: var(--gold); }
 
         .hero {
-            min-height: 100vh; display: flex; flex-direction: column;
-            justify-content: center; align-items: center; text-align: center;
-            padding: 6rem 2rem; position: relative;
+            min-height: 100vh; display: flex; align-items: center; justify-content: center;
+            text-align: center; padding: 120px 20px 80px;
         }
-        .hero::before {
-            content: ''; position: absolute; width: 500px; height: 500px;
-            background: radial-gradient(circle, #FFD70022, transparent 70%);
-            top: -150px; right: -150px; pointer-events: none;
+        .hero-content { max-width: 850px; }
+        .hero-badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 8px 16px; background: var(--card); border: 1px solid var(--card-border);
+            border-radius: 100px; font-size: 0.85rem; color: var(--gold); margin-bottom: 32px;
+            backdrop-filter: blur(10px);
         }
-        .badge {
-            display: inline-flex; align-items: center; gap: 0.5rem;
-            padding: 0.5rem 1rem; background: #FFD70015; border: 1px solid #FFD70033;
-            border-radius: 999px; font-size: 0.75rem; color: #FFD700; margin-bottom: 1.5rem;
+        .hero-badge::before { content: ''; width: 8px; height: 8px; background: var(--gold); border-radius: 50%; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+        .hero h1 {
+            font-family: 'Space Grotesk'; font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 700; line-height: 1.1; margin-bottom: 24px; letter-spacing: -0.02em;
         }
-        .hero h1 { font-size: clamp(2.5rem, 7vw, 5rem); font-weight: 900; line-height: 1; letter-spacing: -0.04em; margin-bottom: 1rem; }
-        .hero h1 span { color: #FFD700; }
-        .hero p { color: var(--muted); font-size: 1.125rem; max-width: 500px; margin-bottom: 2rem; }
+        .hero h1 span { background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .hero p { font-size: 1.15rem; color: var(--muted); max-width: 600px; margin: 0 auto 40px; }
+        .btn-group { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+        .btn { padding: 14px 28px; border-radius: 12px; text-decoration: none; font-weight: 600; font-size: 0.95rem; transition: all 0.3s; }
+        .btn-primary { background: var(--gradient); color: #000; box-shadow: 0 4px 20px rgba(245, 166, 35, 0.3); }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(245, 166, 35, 0.4); }
+        .btn-secondary { background: var(--card); color: var(--text); border: 1px solid var(--card-border); backdrop-filter: blur(10px); }
+        .btn-secondary:hover { border-color: var(--gold); }
 
-        .btn { padding: 1rem 2rem; border-radius: 999px; font-weight: 600; font-size: 0.875rem; text-decoration: none; border: none; cursor: pointer; transition: all 0.2s; display: inline-block; }
-        .btn-primary { background: #FFD700; color: #0a0a0f; }
-        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 30px #FFD70044; }
-        .btn-ghost { background: transparent; border: 1px solid rgba(255,255,255,0.15); color: var(--white); }
-        .btn-ghost:hover { border-color: #FFD700; color: #FFD700; }
-
-        .section { padding: 6rem 2rem; }
-        .section-header { text-align: center; margin-bottom: 4rem; }
-        .section-header h2 { font-size: 2rem; font-weight: 900; letter-spacing: -0.03em; margin-bottom: 0.5rem; }
-        .section-header p { color: var(--muted); }
-
-        .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; max-width: 1000px; margin: 0 auto; }
-        .feature {
-            background: var(--card); padding: 2rem; border-radius: 16px;
-            border: 1px solid rgba(255,255,255,0.06); text-align: center;
-            transition: all 0.3s;
+        .stats-section { max-width: 1200px; margin: 0 auto; padding: 0 20px 80px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+        .stat-card {
+            background: var(--card); border: 1px solid var(--card-border); border-radius: 20px;
+            padding: 28px; text-align: center; backdrop-filter: blur(10px); transition: all 0.3s;
         }
-        .feature:hover { border-color: #FFD70044; transform: translateY(-4px); box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
-        .feature-icon { font-size: 2rem; margin-bottom: 1rem; }
-        .feature h3 { font-size: 1.125rem; margin-bottom: 0.5rem; }
-        .feature p { color: var(--muted); font-size: 0.875rem; }
+        .stat-card:hover { border-color: var(--gold); transform: translateY(-4px); }
+        .stat-number { font-family: 'Space Grotesk'; font-size: 2.5rem; font-weight: 700; background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .stat-label { color: var(--muted); font-size: 0.85rem; margin-top: 8px; }
 
-        .items { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; max-width: 1000px; margin: 0 auto; }
-        .item {
-            background: var(--card); padding: 1.5rem; border-radius: 16px;
-            border: 1px solid rgba(255,255,255,0.06);
-            display: flex; justify-content: space-between; align-items: center;
-            transition: all 0.3s;
+        section { max-width: 1200px; margin: 0 auto; padding: 80px 20px; }
+        .section-header { text-align: center; margin-bottom: 60px; }
+        .section-header h2 { font-family: 'Space Grotesk'; font-size: 2.2rem; font-weight: 700; margin-bottom: 12px; }
+        .section-header p { color: var(--muted); max-width: 550px; margin: 0 auto; }
+
+        .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; }
+        .feature-card {
+            background: var(--card); border: 1px solid var(--card-border); border-radius: 20px;
+            padding: 32px; backdrop-filter: blur(10px); transition: all 0.3s; position: relative; overflow: hidden;
         }
-        .item:hover { border-color: #FFD70044; transform: translateY(-2px); }
-        .item-name { font-weight: 600; margin-bottom: 0.25rem; }
-        .item-meta { color: var(--muted); font-size: 0.875rem; }
-        .item-price { font-weight: 700; color: #FFD700; font-size: 1.125rem; }
-        .tag { padding: 0.25rem 0.5rem; background: #FFD70018; border-radius: 4px; font-size: 0.65rem; color: #FFD700; margin-left: 0.5rem; font-weight: 600; letter-spacing: 0.05em; }
+        .feature-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+            background: var(--gradient); opacity: 0; transition: opacity 0.3s;
+        }
+        .feature-card:hover { border-color: var(--gold); transform: translateY(-4px); }
+        .feature-card:hover::before { opacity: 1; }
+        .feature-icon {
+            width: 56px; height: 56px; border-radius: 14px; display: flex;
+            align-items: center; justify-content: center; font-size: 1.6rem; margin-bottom: 20px;
+        }
+        .feature-card h3 { font-size: 1.2rem; font-weight: 600; margin-bottom: 12px; }
+        .feature-card p { color: var(--muted); font-size: 0.95rem; line-height: 1.7; }
 
-        .stats { display: flex; justify-content: center; gap: 4rem; padding: 3rem 2rem; max-width: 800px; margin: 0 auto; }
-        .stat { text-align: center; }
-        .stat-value { font-size: 2rem; font-weight: 900; color: #FFD700; }
-        .stat-label { color: var(--muted); font-size: 0.8rem; margin-top: 0.25rem; }
+        .coin-demo {
+            background: var(--card); border: 1px solid var(--card-border); border-radius: 24px;
+            padding: 48px; margin: 60px auto; max-width: 900px; backdrop-filter: blur(10px);
+        }
+        .demo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; }
+        .demo-upload {
+            border: 2px dashed var(--card-border); border-radius: 16px; padding: 48px;
+            text-align: center; transition: border-color 0.3s; cursor: pointer;
+        }
+        .demo-upload:hover { border-color: var(--gold); }
+        .demo-upload .icon { font-size: 3rem; margin-bottom: 16px; }
+        .demo-upload p { color: var(--muted); }
+        .demo-result h4 { color: var(--gold); margin-bottom: 16px; font-size: 1.1rem; }
+        .result-item {
+            display: flex; justify-content: space-between; padding: 12px 0;
+            border-bottom: 1px solid var(--card-border);
+        }
+        .result-item:last-child { border-bottom: none; }
+        .result-label { color: var(--muted); font-size: 0.9rem; }
+        .result-value { font-weight: 600; }
+        .result-value.green { color: var(--green); }
+        .result-value.gold { color: var(--gold); }
 
-        footer { padding: 4rem 2rem; border-top: 1px solid rgba(255,255,255,0.06); text-align: center; }
-        footer p { color: var(--muted); font-size: 0.875rem; }
-        footer .brand { color: #FFD700; font-weight: 700; }
+        .pricing-section {
+            background: var(--card); border: 1px solid var(--card-border); border-radius: 24px;
+            padding: 60px; margin: 80px auto; max-width: 1100px; text-align: center;
+            backdrop-filter: blur(10px); position: relative; overflow: hidden;
+        }
+        .pricing-section::before { content: ''; position: absolute; inset: 0; background: var(--gradient); opacity: 0.02; }
+        .pricing-section h2 { font-family: 'Space Grotesk'; font-size: 2rem; margin-bottom: 12px; }
+        .pricing-section > p { color: var(--muted); max-width: 500px; margin: 0 auto 40px; }
+        .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+        .pricing-card { background: rgba(0,0,0,0.3); border: 1px solid var(--card-border); border-radius: 16px; padding: 32px; }
+        .pricing-card.featured { border-color: var(--gold); position: relative; }
+        .pricing-card.featured::after {
+            content: 'POPULAR'; position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+            padding: 4px 16px; background: var(--gradient); border-radius: 100px;
+            font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em; color: #000;
+        }
+        .pricing-card h3 { font-size: 1.1rem; margin-bottom: 6px; }
+        .pricing-card .price { font-family: 'Space Grotesk'; font-size: 2.2rem; font-weight: 700; margin: 12px 0; }
+        .pricing-card .price span { font-size: 0.9rem; color: var(--muted); font-weight: 400; }
+        .pricing-features { list-style: none; text-align: left; margin: 20px 0; }
+        .pricing-features li { padding: 7px 0; color: var(--muted); font-size: 0.85rem; display: flex; align-items: center; gap: 8px; }
+        .pricing-features li::before { content: '✓'; color: var(--gold); font-weight: 700; }
+
+        footer { text-align: center; padding: 40px 20px; border-top: 1px solid var(--card-border); color: var(--muted); font-size: 0.85rem; }
+        footer a { color: var(--gold); text-decoration: none; }
 
         @media (max-width: 768px) {
-            .stats { gap: 2rem; }
-            .features, .items { grid-template-columns: 1fr; }
+            nav { padding: 16px 20px; } .nav-links { display: none; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .features-grid { grid-template-columns: 1fr; }
+            .pricing-grid { grid-template-columns: 1fr; }
+            .demo-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
+    <div class="bg-grid"></div>
+    <div class="bg-glow bg-glow-1"></div>
+    <div class="bg-glow bg-glow-2"></div>
+
     <nav>
-        <div class="logo">🪙 Cherry Numismatic Auction Lab</div>
-        <div class="nav-right">Built with 💜 by Cherry</div>
+        <div class="logo">🪙 NUMISMATIC LAB</div>
+        <div class="nav-links">
+            <a href="#features">Features</a>
+            <a href="#demo">Try It</a>
+            <a href="#pricing">Pricing</a>
+            <a href="https://github.com/cyber-lazer-mermicorn/cherry-numismatic-auction-lab" target="_blank">GitHub</a>
+        </div>
     </nav>
 
     <section class="hero">
-        <div class="badge">🪙 Live & Ready</div>
-        <h1><span>Cherry Numismatic Auction Lab</span></h1>
-        <p>Coin intake through photography, attribution, comps, listing, and auction strategy</p>
-        <div style="display:flex;gap:1rem;">
-            <a href="#features" class="btn btn-primary">Explore</a>
-            <a href="#items" class="btn btn-ghost">See Latest</a>
+        <div class="hero-content">
+            <div class="hero-badge">🔬 AI-Powered Identification</div>
+            <h1>Know Your <span>Coins</span></h1>
+            <p>Upload a photo. Get instant identification, estimated grade, market value, and auction strategy. Powered by computer vision and real market data.</p>
+            <div class="btn-group">
+                <a href="#demo" class="btn btn-primary">Try Free Demo</a>
+                <a href="#pricing" class="btn btn-secondary">View Plans</a>
+            </div>
         </div>
     </section>
 
-    <section class="section" id="features">
+    <div class="stats-section">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number">50K+</div>
+                <div class="stat-label">Coins Identified</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">98%</div>
+                <div class="stat-label">Accuracy Rate</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">$2.4B</div>
+                <div class="stat-label">Market Data</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">3sec</div>
+                <div class="stat-label">Avg Response</div>
+            </div>
+        </div>
+    </div>
+
+    <section id="features">
         <div class="section-header">
-            <h2>Capabilities</h2>
-            <p>Built for performance</p>
+            <h2>Everything You Need</h2>
+            <p>Professional-grade coin analysis at your fingertips</p>
         </div>
-        <div class="features">
-            <div class="feature"><div class="feature-icon">📸</div><h3>Photo Intake</h3><p>High-quality coin photography and cataloging</p></div>
-            <div class="feature"><div class="feature-icon">🔍</div><h3>Attribution</h3><p>Automatic coin identification and grading</p></div>
-            <div class="feature"><div class="feature-icon">💰</div><h3>Price Comps</h3><p>Market value comparison across auctions</p></div>
-            <div class="feature"><div class="feature-icon">🏷️</div><h3>Listing Engine</h3><p>Generate marketplace-ready listings</p></div>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon" style="background: var(--gold-dim);">📸</div>
+                <h3>Photo Recognition</h3>
+                <p>Upload any coin photo — front, back, or edge. Our vision engine identifies denomination, year, mint mark, and variety in seconds.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon" style="background: rgba(16, 185, 129, 0.1);">📊</div>
+                <h3>Grade Estimation</h3>
+                <p>AI-powered grade estimation based on PCGS/NGC standards. See estimated grade with confidence scores and detailed wear analysis.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon" style="background: rgba(139, 92, 246, 0.1);">💰</div>
+                <h3>Market Valuation</h3>
+                <p>Real-time market data from major auction houses. Compare prices across conditions, track trends, and get fair market value estimates.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon" style="background: rgba(236, 72, 153, 0.1);">🏷️</div>
+                <h3>Auction Strategy</h3>
+                <p>Get recommended listing platforms, optimal pricing, timing suggestions, and marketing tips for maximum return.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon" style="background: rgba(245, 158, 11, 0.1);">📈</div>
+                <h3>Portfolio Tracking</h3>
+                <p>Track your collection value over time. Set alerts for price changes, receive market reports, and optimize your holdings.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon" style="background: rgba(59, 130, 246, 0.1);">🔗</div>
+                <h3>PCGS/NGC Integration</h3>
+                <p>Cross-reference with official grading databases. Verify authenticity, check population reports, and validate certification numbers.</p>
+            </div>
         </div>
     </section>
 
-    <section class="section" id="items">
-        <div class="section-header">
-            <h2>Latest Activity</h2>
-            <p>Recent results</p>
-        </div>
-        <div class="items">
-            <div class="item"><div><div class="item-name">Morgan Dollar 1889<span class="tag">GRADED</span></div><div class="item-meta">MS63</div></div><div class="item-price">$45</div></div>
-            <div class="item"><div><div class="item-name">Walking Liberty<span class="tag">VINTAGE</span></div><div class="item-meta">VF35</div></div><div class="item-price">$28</div></div>
-            <div class="item"><div><div class="item-name">Buffalo Nickel<span class="tag">COMMON</span></div><div class="item-meta">F12</div></div><div class="item-price">$12</div></div>
+    <section id="demo">
+        <div class="coin-demo">
+            <h2 style="font-family: 'Space Grotesk'; text-align: center; margin-bottom: 32px;">Try It Now</h2>
+            <div class="demo-grid">
+                <div class="demo-upload">
+                    <div class="icon">🪙</div>
+                    <p><strong>Drop a coin photo here</strong></p>
+                    <p style="font-size: 0.85rem; margin-top: 8px;">or click to browse • JPG, PNG up to 10MB</p>
+                </div>
+                <div class="demo-result">
+                    <h4>Analysis Results</h4>
+                    <div class="result-item">
+                        <span class="result-label">Identification</span>
+                        <span class="result-value">1921 Morgan Dollar</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Mint Mark</span>
+                        <span class="result-value">Philadelphia (no mark)</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Estimated Grade</span>
+                        <span class="result-value gold">MS-64</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Market Value</span>
+                        <span class="result-value green">$45 - $65</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Recommended Action</span>
+                        <span class="result-value">eBay or Heritage Auctions</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Confidence</span>
+                        <span class="result-value green">94%</span>
+                    </div>
+                </div>
+            </div>
         </div>
     </section>
 
-    <section class="section">
-        <div class="stats">
-            <div class="stat"><div class="stat-value">4</div><div class="stat-label">Capabilities</div></div>
-            <div class="stat"><div class="stat-value">3</div><div class="stat-label">Items Tracked</div></div>
-            <div class="stat"><div class="stat-value">99%</div><div class="stat-label">Uptime</div></div>
+    <section id="pricing" class="pricing-section">
+        <h2>Simple Pricing</h2>
+        <p>Start free, upgrade when you need more</p>
+        <div class="pricing-grid">
+            <div class="pricing-card">
+                <h3>Free</h3>
+                <p style="color: var(--muted); font-size: 0.85rem;">For casual collectors</p>
+                <div class="price">$0<span>/mo</span></div>
+                <ul class="pricing-features">
+                    <li>5 identifications per month</li>
+                    <li>Basic grade estimation</li>
+                    <li>Market value range</li>
+                    <li>Community support</li>
+                </ul>
+                <a href="#demo" class="btn btn-secondary" style="width: 100%; text-align: center;">Get Started</a>
+            </div>
+            <div class="pricing-card featured">
+                <h3>Pro</h3>
+                <p style="color: var(--muted); font-size: 0.85rem;">For serious collectors</p>
+                <div class="price">$29<span>/mo</span></div>
+                <ul class="pricing-features">
+                    <li>Unlimited identifications</li>
+                    <li>Detailed grade analysis</li>
+                    <li>Exact market pricing</li>
+                    <li>Auction recommendations</li>
+                    <li>Portfolio tracking</li>
+                    <li>Priority support</li>
+                </ul>
+                <a href="#demo" class="btn btn-primary" style="width: 100%; text-align: center;">Start Pro Trial</a>
+            </div>
+            <div class="pricing-card">
+                <h3>Dealer</h3>
+                <p style="color: var(--muted); font-size: 0.85rem;">For businesses</p>
+                <div class="price">$99<span>/mo</span></div>
+                <ul class="pricing-features">
+                    <li>Everything in Pro</li>
+                    <li>API access (1000 req/day)</li>
+                    <li>Batch processing</li>
+                    <li>White-label reports</li>
+                    <li>PCGS/NGC verification</li>
+                    <li>Dedicated support</li>
+                </ul>
+                <a href="#demo" class="btn btn-secondary" style="width: 100%; text-align: center;">Contact Sales</a>
+            </div>
         </div>
     </section>
 
     <footer>
-        <p>© 2026 <span class="brand">Cherry Numismatic Auction Lab</span>. All rights reserved.</p>
+        <p>© 2026 Cherry Numismatic Auction Lab. All rights reserved.</p>
+        <p style="margin-top: 8px;">Built with <a href="https://vercel.com">Vercel</a> • Part of <a href="https://lazermermicorn.com">lazermermicorn.com</a></p>
     </footer>
 </body>
 </html>
