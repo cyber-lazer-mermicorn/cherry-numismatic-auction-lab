@@ -3,7 +3,7 @@ schema_version: "1.0"
 id: cherry-numismatic-auction-lab
 display_name: Cherry Numismatic Auction Lab
 owner: cherry
-lane: collectibles-commerce
+lane: commerce
 visibility: public
 status: foundation
 
